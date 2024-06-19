@@ -339,11 +339,13 @@ static void temp_read_task(void *parameter)
         mqtt_publish_sub_value_double(MQTT_SUB_OUT, 0, MQTT_SUB_VAL_TEMP, "%.2f", relay_1_temp, 0);
         mqtt_publish_sub_value_double(MQTT_SUB_OUT, 1, MQTT_SUB_VAL_TEMP, "%.2f", relay_2_temp, 0);
 
+        ds18b20_trigger_all_temperature_conversion(bus);
+        vTaskDelay(pdMS_TO_TICKS(800));
+
         for (int i = 0; i < ds18b20_device_num; i ++)
         {
             float temperature;
             uint64_t addr;
-            ESP_ERROR_CHECK(ds18b20_trigger_temperature_conversion(ds18b20s[i]));
             ESP_ERROR_CHECK(ds18b20_get_temperature(ds18b20s[i], &temperature));
             ESP_ERROR_CHECK(ds18b20_get_address(ds18b20s[i], &addr));
             mqtt_publish_ds18b20_value(addr, temperature, 0);

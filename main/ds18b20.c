@@ -147,3 +147,14 @@ esp_err_t ds18b20_get_address(ds18b20_device_handle_t ds18b20, uint64_t *address
     *address = ds18b20->addr;
     return ESP_OK;
 }
+
+esp_err_t ds18b20_trigger_all_temperature_conversion(onewire_bus_handle_t bus)
+{
+    ESP_RETURN_ON_FALSE(bus, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    // reset bus and check if the ds18b20 is present
+    ESP_RETURN_ON_ERROR(onewire_bus_reset(bus), TAG, "reset bus error");
+    // send command
+    uint8_t tx_buffer[2] = { ONEWIRE_CMD_SKIP_ROM, DS18B20_CMD_CONVERT_TEMP };
+
+    return onewire_bus_write_bytes(bus, tx_buffer, sizeof(tx_buffer));
+}

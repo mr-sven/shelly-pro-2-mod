@@ -94,6 +94,8 @@ esp_err_t ds18b20_get_temperature(ds18b20_device_handle_t ds18b20, float *temper
 
 esp_err_t ds18b20_get_address(ds18b20_device_handle_t ds18b20, uint64_t *address);
 
+esp_err_t ds18b20_trigger_all_temperature_conversion(onewire_bus_handle_t bus);
+
 #ifdef __cplusplus
 }
 #endif
