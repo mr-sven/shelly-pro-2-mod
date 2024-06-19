@@ -330,6 +330,13 @@ static void temp_read_task(void *parameter)
 
     for(;;)
     {
+        TickType_t ds18b20_read_time;
+        if (ds18b20_device_num > 0)
+        {
+            ds18b20_trigger_all_temperature_conversion(bus);
+            ds18b20_read_time = xTaskGetTickCount();
+        }
+
         adc_oneshot_get_calibrated_result(adc_handle, cali_relay_1_handle, RELAY_1_TEMP_ADC_CHANNEL, &relay_1_mv);
         adc_oneshot_get_calibrated_result(adc_handle, cali_relay_2_handle, RELAY_1_TEMP_ADC_CHANNEL, &relay_2_mv);
 
@@ -339,16 +346,17 @@ static void temp_read_task(void *parameter)
         mqtt_publish_sub_value_double(MQTT_SUB_OUT, 0, MQTT_SUB_VAL_TEMP, "%.2f", relay_1_temp, 0);
         mqtt_publish_sub_value_double(MQTT_SUB_OUT, 1, MQTT_SUB_VAL_TEMP, "%.2f", relay_2_temp, 0);
 
-        ds18b20_trigger_all_temperature_conversion(bus);
-        vTaskDelay(pdMS_TO_TICKS(800));
-
-        for (int i = 0; i < ds18b20_device_num; i ++)
+        if (ds18b20_device_num > 0)
         {
-            float temperature;
-            uint64_t addr;
-            ESP_ERROR_CHECK(ds18b20_get_temperature(ds18b20s[i], &temperature));
-            ESP_ERROR_CHECK(ds18b20_get_address(ds18b20s[i], &addr));
-            mqtt_publish_ds18b20_value(addr, temperature, 0);
+            vTaskDelayUntil(&ds18b20_read_time, pdMS_TO_TICKS(800));
+            for (int i = 0; i < ds18b20_device_num; i ++)
+            {
+                float temperature;
+                uint64_t addr;
+                ESP_ERROR_CHECK(ds18b20_get_temperature(ds18b20s[i], &temperature));
+                ESP_ERROR_CHECK(ds18b20_get_address(ds18b20s[i], &addr));
+                mqtt_publish_ds18b20_value(addr, temperature, 0);
+            }
         }
 
         vTaskDelay(pdMS_TO_TICKS(10000));
